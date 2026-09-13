@@ -216,81 +216,49 @@ end)
 
 hideswitch:Set(true)
 
-getgenv().ThreadCount = 12
-getgenv().isGrinding = true
+AutoFarm:AddTextBox('Enter Rep Speed', function(p273)
+    local v274 = tonumber(p273)
+    if v274 and 0 < v274 then
+        getgenv().RepSpeed = v274
+        print('Rep speed set to:', v274)
+    else
+        warn('Invalid number entered.')
+    end
+end)
 
-local function startGrinding()
-    for _ = 1, (getgenv().ThreadCount or 12) do
-        task.spawn(function()
-            while getgenv().isGrinding do
-                local success, err = pcall(function()
-                    game:GetService('Players').LocalPlayer.muscleEvent:FireServer('rep')
-                end)
-                if not success then
-                    warn('Failed to fire rep:', err)
+local RepSpeed = AutoFarm:AddSwitch('Start Gaining Strength', function(p275)
+    getgenv().isGrinding = p275
+    if p275 then
+        local threads = getgenv().ThreadCount or 1
+        for _ = 1, threads do
+            task.spawn(function()
+                while getgenv().isGrinding do
+                    local v276, v277 = pcall(function()
+                        game:GetService('Players').LocalPlayer.muscleEvent:FireServer('rep')
+                    end)
+                    if not v276 then
+                        warn('Failed to fire rep:', v277)
+                    end
+                    task.wait(getgenv().RepSpeed or 0.01)
                 end
-                task.wait(0.01)
-            end
-        end)
-    end
-end
-
-pcall(function()
-    local textBox = AutoFarm:AddTextBox('Enter Rep Speed', function(p273)
-        local v274 = tonumber(p273)
-        if v274 and 0 < v274 then
-            getgenv().ThreadCount = v274
-            print('Thread count set to:', v274)
-        else
-            warn('Invalid number of threads entered.')
+            end)
         end
-    end)
-    if textBox and typeof(textBox.Set) == "function" then
-        textBox:Set("12")
     end
 end)
 
-local strengthSwitch
-pcall(function()
-    strengthSwitch = AutoFarm:AddSwitch('Start Gaining Strength', function(p275)
-        getgenv().isGrinding = p275
-        if p275 then
-            startGrinding()
-        end
-    end)
-end)
+RepSpeed:Set(true)
 
--- Start the grinding loop immediately
-startGrinding()
-
--- Safely sync the UI switch to true
-task.spawn(function()
-    task.wait(0.5)
-    if strengthSwitch and typeof(strengthSwitch.Set) == "function" then
-        pcall(function()
-            strengthSwitch:Set(true)
-        end)
-    end
-end)
-
-_G.infiniteRebirthActive = true
-
--- Start the loop immediately
-spawn(function()
-    while _G.infiniteRebirthActive and wait(0.1) do
-        game:GetService("ReplicatedStorage").rEvents.rebirthRemote:InvokeServer("rebirthRequest")
-    end
-end)
-
-local infiniteSwitch = AutoFarm:AddSwitch("Auto Rebirth (Infinite)", function(bool)
+local rebirths = AutoFarm:AddSwitch("Auto Rebirth (Infinite)", function(bool)
     _G.infiniteRebirthActive = bool
     
     if bool then
+        -- Turn off target rebirth if it's on
         if _G.targetRebirthActive and targetSwitch then
             targetSwitch:Set(false)
             _G.targetRebirthActive = false
         end
         
+        -- Start infinite rebirth loop
         spawn(function()
             while _G.infiniteRebirthActive and wait(0.1) do
                 game:GetService("ReplicatedStorage").rEvents.rebirthRemote:InvokeServer("rebirthRequest")
@@ -299,14 +267,7 @@ local infiniteSwitch = AutoFarm:AddSwitch("Auto Rebirth (Infinite)", function(bo
     end
 end, "Renacimiento continuo sin parar")
 
-task.spawn(function()
-    task.wait(0.5)
-    if infiniteSwitch and typeof(infiniteSwitch.Set) == "function" then
-        pcall(function()
-            infiniteSwitch:Set(true)
-        end)
-    end
-end)
+rebirths:Set(true)
 
 AutoFarm:AddButton("Equip Rep Pets", function()
     local player = game:GetService("Players").LocalPlayer
@@ -401,7 +362,7 @@ AutoFarm:AddButton("Equip Rep Pets", function()
     end
 end)
 
-local u377 = true
+local u377 = false
 
 local function u382()
     pcall(function()
@@ -437,15 +398,11 @@ task.spawn(function()
     end
 end)
 
-local switch = AutoFarm:AddSwitch("Auto Egg (30 Min)", function(p383)
+local 30egg = AutoFarm:AddSwitch("Auto Egg (30 Min)", function(p383)
     u377 = p383
 end)
 
-if switch and typeof(switch.Set) == "function" then
-    pcall(function()
-        switch:Set(true)
-    end)
-end
+30egg:Set(true)
 
 local u377 = false
 
@@ -484,9 +441,11 @@ task.spawn(function()
     end
 end)
 
-AutoFarm:AddSwitch("Auto Egg (60 Min)", function(p383)
+local 60egg = AutoFarm:AddSwitch("Auto Egg (60 Min)", function(p383)
     u377 = p383
 end)
+
+60egg:Set(true)
 
 local Industrial = AutoFarm:AddFolder("Auto Farm Industrial Gym")
 
