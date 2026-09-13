@@ -49,6 +49,40 @@ end)
 local AutoFarm = window:AddTab("Farm")
 AutoFarm:Show()
 
+local TeleportService = game:GetService("TeleportService")
+local CoreGui = game:GetService("CoreGui")
+local PlaceId = game.PlaceId
+local autoReconnectEnabled = false
+
+-- Polling loop para masigurong mahuhuli kahit "Please check your internet" error prompt
+task.spawn(function()
+    while task.wait(1) do
+        if autoReconnectEnabled then
+            pcall(function()
+                local promptGui = CoreGui:FindFirstChild("RobloxPromptGui")
+                if promptGui then
+                    local promptOverlay = promptGui:FindFirstChild("promptOverlay")
+                    if promptOverlay then
+                        for _, child in ipairs(promptOverlay:GetChildren()) do
+                            if child.Name == "ErrorPrompt" then
+                                TeleportService:Teleport(PlaceId)
+                                task.wait(3)
+                            end
+                        end
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+-- Switch para i-on/off ang auto reconnect
+local autoreconnect = AutoFarm:AddSwitch("Enable Auto-Reconnect", function(bool)
+    autoReconnectEnabled = bool
+end)
+
+autoreconnect:Set(true)
+
 local Players = game:GetService("Players")
 local VirtualUser = game:GetService("VirtualUser")
 local CoreGui = game:GetService("CoreGui")
