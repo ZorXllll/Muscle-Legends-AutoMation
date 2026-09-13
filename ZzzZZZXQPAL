@@ -398,11 +398,11 @@ task.spawn(function()
     end
 end)
 
-local 30egg = AutoFarm:AddSwitch("Auto Egg (30 Min)", function(p383)
+local segg = AutoFarm:AddSwitch("Auto Egg (30 Min)", function(p383)
     u377 = p383
 end)
 
-30egg:Set(true)
+segg:Set(true)
 
 local u377 = false
 
@@ -441,11 +441,9 @@ task.spawn(function()
     end
 end)
 
-local 60egg = AutoFarm:AddSwitch("Auto Egg (60 Min)", function(p383)
+local ssegg = AutoFarm:AddSwitch("Auto Egg (60 Min)", function(p383)
     u377 = p383
 end)
-
-60egg:Set(true)
 
 local Industrial = AutoFarm:AddFolder("Auto Farm Industrial Gym")
 
