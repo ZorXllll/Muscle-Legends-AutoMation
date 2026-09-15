@@ -206,14 +206,15 @@ end)
 -- Visually toggle Elerium switch checkmark to ON immediately upon loading script
 AntiAFKSwitch:Set(true)
 
-local hideswitch = AutoFarm:AddSwitch("Hide Pets", false, function(state)
+local hideswitch = AutoFarm:AddSwitch("Hide Pets", function(state)
+    -- Fire RemoteEvent
     local args = {
         [1] = state and "hidePets" or "showPets"
     }
-
     game:GetService("ReplicatedStorage").rEvents.showPetsEvent:FireServer(unpack(args))
 end)
 
+-- Set the initial toggle state
 hideswitch:Set(true)
 
 AutoFarm:AddTextBox('Enter Rep Speed', function(p273)
