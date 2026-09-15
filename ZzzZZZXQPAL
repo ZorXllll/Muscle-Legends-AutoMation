@@ -270,6 +270,46 @@ end, "Renacimiento continuo sin parar")
 
 rebirths:Set(true)
 
+local isLocked = false
+local savedCFrame = nil -- Dito itatabi ang eksaktong lokasyon mo
+local player = game:GetService("Players").LocalPlayer
+
+-- Function na awtomatikong magbabalik at magla-lock sa iyo pagka-respawn
+local function applyLock(character)
+    if isLocked and savedCFrame then
+        local rootPart = character:WaitForChild("HumanoidRootPart", 5)
+        if rootPart then
+            task.wait(0.2) -- Safe delay para hindi mag-glitch ang loading ng laro
+            rootPart.CFrame = savedCFrame -- Ite-teleport ka pabalik sa tinagong pwesto
+            task.wait(0.05)
+            rootPart.Anchored = true -- Ika-lock ka ulit sa pwestong iyon
+        end
+    end
+end
+
+-- Taga-bantay tuwing namamatay at nabubuhay ka ulit
+player.CharacterAdded:Connect(applyLock)
+
+-- Ang tamang Elerium V2 Switch Element
+AutoFarm:AddSwitch("Lock Position", function(state)
+    isLocked = state
+    
+    if player.Character then
+        local rootPart = player.Character:FindFirstChild("HumanoidRootPart")
+        if rootPart then
+            if state then
+                -- Pagka-on ng switch, ise-save ang kasalukuyang pwesto mo ngayon
+                savedCFrame = rootPart.CFrame
+                rootPart.Anchored = true
+            else
+                -- Pagka-off, pakakawalan ang character mo at buburahin ang saved spot
+                rootPart.Anchored = false
+                savedCFrame = nil
+            end
+        end
+    end
+end)
+
 AutoFarm:AddButton("Equip Rep Pets", function()
     local player = game:GetService("Players").LocalPlayer
     local petsFolder = player:FindFirstChild("petsFolder")
@@ -445,6 +485,79 @@ end)
 local ssegg = AutoFarm:AddSwitch("Auto Egg (60 Min)", function(p383)
     u377 = p383
 end)
+
+local AutoEquipTools = AutoFarm:AddFolder("Auto Tools")
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local function autoEquipItem(toolName, globalVar, customEventName, customEventArg, defaultState)
+    _G[globalVar] = defaultState or false
+
+    local switch = AutoEquipTools:AddSwitch("Auto " .. toolName, function(Value)
+        _G[globalVar] = Value
+        
+        -- Tool equip loop set to task.wait(5)
+        task.spawn(function()
+            while _G[globalVar] do
+                task.wait(5)
+                if not _G[globalVar] then break end
+                
+                local character = LocalPlayer.Character
+                local backpack = LocalPlayer.Backpack
+                
+                if character and character:FindFirstChildOfClass("Humanoid") then
+                    local humanoid = character:FindFirstChildOfClass("Humanoid")
+                    local equipped = character:FindFirstChild(toolName)
+                    
+                    if not equipped and backpack then
+                        local tool = backpack:FindFirstChild(toolName)
+                        if tool then
+                            humanoid:EquipTool(tool)
+                        end
+                    end
+                end
+            end
+        end)
+        
+        -- Muscle event loop remains fast
+        task.spawn(function()
+            while _G[globalVar] do
+                task.wait(0.1)
+                if not _G[globalVar] then break end
+                
+                local muscleEvent = LocalPlayer:FindFirstChild("muscleEvent")
+                if muscleEvent then
+                    if customEventName then
+                        muscleEvent:FireServer(customEventName, customEventArg)
+                    else
+                        muscleEvent:FireServer("rep")
+                    end
+                end
+            end
+        end)
+        
+        if not Value then
+            local character = LocalPlayer.Character
+            local backpack = LocalPlayer.Backpack
+            if character and backpack then
+                local equipped = character:FindFirstChild(toolName)
+                if equipped then
+                    equipped.Parent = backpack
+                end
+            end
+        end
+    end)
+
+    if defaultState then
+        switch:Set(true)
+    end
+end
+
+autoEquipItem("Weight", "AutoWeight", nil, nil, true)
+autoEquipItem("Pushups", "AutoPushups")
+autoEquipItem("Handstands", "AutoHandstands")
+autoEquipItem("Situps", "AutoSitups")
 
 local Industrial = AutoFarm:AddFolder("Auto Farm Industrial Gym")
 
